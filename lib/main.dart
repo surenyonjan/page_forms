@@ -37,6 +37,12 @@ class MyApp extends StatelessWidget {
               child: Text('Page 2'),
             ),
           ),
+          PageField(
+            color: Colors.red,
+            child: Center(
+              child: Text('Page 3'),
+            ),
+          ),
         ],
       ),
     );
