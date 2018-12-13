@@ -182,7 +182,7 @@ class _PageControllersState extends State<_PageControllers> with SingleTickerPro
           pageWidth: pageWidth,
           pageHeight: pageHeight,
           pageCount: pages.length,
-          currentIndex: pageProgress.value.toInt(),
+          pageProgress: pageProgress.value,
         ),
         children: List.generate(pages.length, (int pageIndex) {
           return LayoutId(
@@ -229,22 +229,26 @@ class _PagesLayoutDelegate extends MultiChildLayoutDelegate {
   final double pageWidth;
   final double pageHeight;
   final int pageCount;
-  final int currentIndex;
+  final double pageProgress;
 
   _PagesLayoutDelegate({
     @required this.pageWidth,
     @required this.pageHeight,
     @required this.pageCount,
-    @required this.currentIndex,
+    @required this.pageProgress,
   });
 
   @override
   void performLayout(Size size) {
+    final int transitioningTo = pageProgress.ceil();
     List.generate(this.pageCount, (int pageIndex) {
       final String currentPageId = 'page$pageIndex';
       layoutChild(currentPageId, BoxConstraints.tightFor(width: pageWidth, height: pageHeight));
-      if (pageIndex > currentIndex) {
+      if (pageIndex > transitioningTo) {
         positionChild(currentPageId, Offset(pageWidth, 0));
+      } else if(pageIndex == transitioningTo) {
+        final double progressOffset = transitioningTo - pageProgress;
+        positionChild(currentPageId, Offset(progressOffset * pageWidth, 0));
       } else {
         positionChild(currentPageId, Offset(0, 0));
       }
@@ -252,6 +256,6 @@ class _PagesLayoutDelegate extends MultiChildLayoutDelegate {
   }
 
   @override shouldRelayout(_PagesLayoutDelegate oldDelegate) {
-    return this.currentIndex != oldDelegate.currentIndex;
+    return this.pageProgress.ceil() != oldDelegate.pageProgress;
   }
 }
