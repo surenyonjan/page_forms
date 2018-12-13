@@ -22,7 +22,23 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: PageForms(),
+      home: PageForms(
+        startIndex: 0,
+        pages: <PageField>[
+          PageField(
+            color: Colors.green,
+            child: Center(
+              child: Text('Page 1'),
+            ),
+          ),
+          PageField(
+            color: Colors.orange,
+            child: Center(
+              child: Text('Page 2'),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
