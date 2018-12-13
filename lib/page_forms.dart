@@ -16,6 +16,7 @@ final ThemeData _kThemeData = ThemeData(
 final double _kProgressIndicatorHeight = 10.0;
 final Color _kProgressIndicatorColor = Colors.blue;
 final Color _kProgressBackgroundColor = Colors.blueGrey;
+final double _kFooterBarheight = 120.0;
 
 class PageForms extends StatefulWidget {
 
@@ -32,6 +33,7 @@ class PageForms extends StatefulWidget {
     themeData: _kThemeData,
     progressIndicatorHeight: _kProgressIndicatorHeight,
     progressIndicatorColor: _kProgressIndicatorColor,
+    footerBarHeight: _kFooterBarheight,
     pages: pages,
     startIndex: startIndex,
   );
@@ -42,6 +44,7 @@ class PageFormsState extends State<PageForms> with SingleTickerProviderStateMixi
   final ThemeData themeData;
   final double progressIndicatorHeight;
   final Color progressIndicatorColor;
+  final double footerBarHeight;
   final List<PageField> pages;
   final int startIndex;
 
@@ -50,6 +53,7 @@ class PageFormsState extends State<PageForms> with SingleTickerProviderStateMixi
     @required this.themeData,
     @required this.progressIndicatorHeight,
     @required this.progressIndicatorColor,
+    @required this.footerBarHeight,
     @required this.pages,
     @required this.startIndex,
   });
@@ -82,6 +86,7 @@ class PageFormsState extends State<PageForms> with SingleTickerProviderStateMixi
             pageWidth: screenWidth,
             pageHeight: screenHeight,
             statusBarHeight: statusBarHeight,
+            footerBarHeight: footerBarHeight,
             pages: pages,
             pageProgress: _pageProgress,
             startIndex: startIndex,
@@ -129,6 +134,7 @@ class _PageControllers extends StatefulWidget {
   final double pageHeight;
   final List<PageField> pages;
   final double statusBarHeight;
+  final double footerBarHeight;
   int currentIndex;
   AnimationController pageProgress;
 
@@ -137,6 +143,7 @@ class _PageControllers extends StatefulWidget {
     @required this.pageHeight,
     @required this.pages,
     @required this.statusBarHeight,
+    @required this.footerBarHeight,
     @required this.pageProgress,
     int startIndex = 0,
   }) {
@@ -149,6 +156,7 @@ class _PageControllers extends StatefulWidget {
     pageHeight: pageHeight,
     pages: pages,
     statusBarHeight: statusBarHeight,
+    footerBarHeight: footerBarHeight,
     currentIndex: currentIndex,
     pageProgress: pageProgress,
   );
@@ -160,17 +168,21 @@ class _PageControllersState extends State<_PageControllers> with SingleTickerPro
   final double pageHeight;
   final List<PageField> pages;
   final double statusBarHeight;
+  final double footerBarHeight;
   final int currentIndex;
   AnimationController pageProgress;
+
+  final double footerBarPadding = 10.0;
 
   _PageControllersState({
     @required this.pageWidth,
     @required this.pageHeight,
     @required this.pages,
     @required this.statusBarHeight,
+    @required this.footerBarHeight,
     @required this.currentIndex,
     @required this.pageProgress,
-  });
+  }) : assert(footerBarHeight > 100.0);
 
   @override
   Widget build(BuildContext cxt) {
@@ -189,40 +201,43 @@ class _PageControllersState extends State<_PageControllers> with SingleTickerPro
           final bool shouldShowBackButton = pageIndex > 0;
 
           List<Widget> footerActions = [];
+          final double footerActionButtonHeight = footerBarHeight - (footerBarPadding * 2);
 
           if (shouldShowBackButton) {
-            footerActions.add(GestureDetector(
-              child: Container(
-                width: 120.0,
-                height: 120.0,
-                child: Center(
-                  child: Text(
-                    'Back',
-                    style: _kThemeData.textTheme.button,
+            footerActions.add(Padding(
+              padding: EdgeInsets.symmetric(vertical: footerBarPadding, horizontal: footerBarPadding),
+              child: GestureDetector(
+                onTapUp: (_) => pageProgress.animateTo((pageIndex - 1).toDouble()),
+                child: Container(
+                  width: 120.0,
+                  height: footerActionButtonHeight,
+                  child: Center(
+                    child: Text(
+                      'Back',
+                      style: _kThemeData.textTheme.button,
+                    ),
                   ),
                 ),
               ),
-              onTapUp: (_) {
-                pageProgress.animateTo((pageIndex - 1).toDouble());
-              },
             ));
           }
 
           if (shouldShowNextButton) {
-            footerActions.add(GestureDetector(
-              child: Container(
-                width: 120.0,
-                height: 120.0,
-                child: Center(
-                  child: Text(
-                    'Next',
-                    style: _kThemeData.textTheme.button,
+            footerActions.add(Padding(
+              padding: EdgeInsets.symmetric(vertical: footerBarPadding, horizontal: footerBarPadding),
+              child: GestureDetector(
+                onTapUp: (_) => pageProgress.animateTo((pageIndex + 1).toDouble()),
+                child: Container(
+                  width: 120.0,
+                  height: footerActionButtonHeight,
+                  child: Center(
+                    child: Text(
+                      'Next',
+                      style: _kThemeData.textTheme.button,
+                    ),
                   ),
                 ),
               ),
-              onTapUp: (_) {
-                pageProgress.animateTo((pageIndex + 1).toDouble());
-              },
             ));
           }
 
@@ -245,6 +260,7 @@ class _PageControllersState extends State<_PageControllers> with SingleTickerPro
                     ),
                   ),
                   Container(
+                    height: footerBarHeight,
                     child: Row(
                       mainAxisAlignment: !shouldShowBackButton
                         ? MainAxisAlignment.end
