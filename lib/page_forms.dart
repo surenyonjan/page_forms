@@ -15,6 +15,7 @@ final ThemeData _kThemeData = ThemeData(
 );
 final double _kProgressIndicatorHeight = 10.0;
 final Color _kProgressIndicatorColor = Colors.blue;
+final Color _kProgressBackgroundColor = Colors.blueGrey;
 
 class PageForms extends StatefulWidget {
 
@@ -44,6 +45,7 @@ class PageFormsState extends State<PageForms> with SingleTickerProviderStateMixi
   final List<PageField> pages;
   final int startIndex;
 
+  AnimationController _pageProgress;
   PageFormsState({
     @required this.themeData,
     @required this.progressIndicatorHeight,
@@ -51,6 +53,20 @@ class PageFormsState extends State<PageForms> with SingleTickerProviderStateMixi
     @required this.pages,
     @required this.startIndex,
   });
+
+  @override
+  void initState() {
+    super.initState();
+    _pageProgress = AnimationController(
+      value: startIndex.toDouble(),
+      lowerBound: 0.0,
+      upperBound: (pages.length - 1).toDouble(),
+      vsync: this,
+    );
+    _pageProgress.addListener(() {
+      setState(() {});
+    });
+  }
 
   @override
   Widget build(BuildContext cxt) {
@@ -68,13 +84,23 @@ class PageFormsState extends State<PageForms> with SingleTickerProviderStateMixi
             pages: pages,
             startIndex: startIndex,
           ),
+          // progress indicator background
+          Positioned(
+            top: statusBarHeight,
+            left: 0.0,
+            child: Container(
+              color: _kProgressBackgroundColor,
+              width: screenWidth,
+              height: progressIndicatorHeight,
+            ),
+          ),
           // progress indicator
           Positioned(
             top: statusBarHeight,
             left: 0.0,
             child: Container(
               color: progressIndicatorColor,
-              width: screenWidth,
+              width: ((_pageProgress.value + 1) / pages.length) * screenWidth,
               height: progressIndicatorHeight,
             ),
           ),
