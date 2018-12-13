@@ -96,10 +96,13 @@ class PageFormsState extends State<PageForms> with SingleTickerProviderStateMixi
             Positioned(
               top: statusBarHeight,
               left: 0.0,
-              child: Container(
-                color: _kProgressBackgroundColor,
-                width: screenWidth,
-                height: progressIndicatorHeight,
+              child: Opacity(
+                opacity: 0.3,
+                child: Container(
+                  color: _kProgressBackgroundColor,
+                  width: screenWidth,
+                  height: progressIndicatorHeight,
+                ),
               ),
             ),
             // progress indicator
