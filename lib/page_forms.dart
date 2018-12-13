@@ -62,6 +62,7 @@ class PageFormsState extends State<PageForms> with SingleTickerProviderStateMixi
       lowerBound: 0.0,
       upperBound: (pages.length - 1).toDouble(),
       vsync: this,
+      duration: Duration(milliseconds: 1000),
     );
     _pageProgress.addListener(() {
       setState(() {});
@@ -82,6 +83,7 @@ class PageFormsState extends State<PageForms> with SingleTickerProviderStateMixi
             pageHeight: screenHeight,
             statusBarHeight: statusBarHeight,
             pages: pages,
+            pageProgress: _pageProgress,
             startIndex: startIndex,
           ),
           // progress indicator background
@@ -128,12 +130,14 @@ class _PageControllers extends StatefulWidget {
   final List<PageField> pages;
   final double statusBarHeight;
   int currentIndex;
+  AnimationController pageProgress;
 
   _PageControllers({
     @required this.pageWidth,
     @required this.pageHeight,
     @required this.pages,
     @required this.statusBarHeight,
+    @required this.pageProgress,
     int startIndex = 0,
   }) {
     currentIndex = startIndex;
@@ -146,6 +150,7 @@ class _PageControllers extends StatefulWidget {
     pages: pages,
     statusBarHeight: statusBarHeight,
     currentIndex: currentIndex,
+    pageProgress: pageProgress,
   );
 }
 
@@ -156,6 +161,7 @@ class _PageControllersState extends State<_PageControllers> with SingleTickerPro
   final List<PageField> pages;
   final double statusBarHeight;
   final int currentIndex;
+  AnimationController pageProgress;
 
   _PageControllersState({
     @required this.pageWidth,
@@ -163,6 +169,7 @@ class _PageControllersState extends State<_PageControllers> with SingleTickerPro
     @required this.pages,
     @required this.statusBarHeight,
     @required this.currentIndex,
+    @required this.pageProgress,
   });
 
   @override
@@ -175,21 +182,39 @@ class _PageControllersState extends State<_PageControllers> with SingleTickerPro
           pageWidth: pageWidth,
           pageHeight: pageHeight,
           pageCount: pages.length,
-          currentIndex: currentIndex,
+          currentIndex: pageProgress.value.toInt(),
         ),
         children: List.generate(pages.length, (int pageIndex) {
           return LayoutId(
             id: 'page$pageIndex',
             child: Container(
               color: pages[pageIndex].color,
-              child: Padding(
-                padding: EdgeInsets.only(
-                  top: statusBarHeight,
-                  left: 12.0,
-                  right: 12.0,
-                  bottom: 30.0,
-                ),
-                child: pages[pageIndex].child,
+              child: Column(
+                children: <Widget>[
+                  Container(
+                    height: pageHeight - 120.0,
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        top: statusBarHeight,
+                        left: 12.0,
+                        right: 12.0,
+                        bottom: 30.0,
+                      ),
+                      child: pages[pageIndex].child,
+                    ),
+                  ),
+                  Container(
+                    height: 120.0,
+                    child: GestureDetector(
+                      child: Center(
+                        child: Text('Next'),
+                      ),
+                      onTapUp: (_) {
+                        pageProgress.animateTo((pageIndex + 1).toDouble());
+                      },
+                    )
+                  )
+                ],
               ),
             ),
           );
