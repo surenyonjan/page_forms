@@ -79,39 +79,41 @@ class PageFormsState extends State<PageForms> with SingleTickerProviderStateMixi
     final screenWidth = mediaQueryData.size.width;
     final screenHeight = mediaQueryData.size.height;
     final statusBarHeight = mediaQueryData.padding.top;
-    return SizedBox.expand(
-      child: Stack(
-        children: <Widget>[
-          _PageControllers(
-            pageWidth: screenWidth,
-            pageHeight: screenHeight,
-            statusBarHeight: statusBarHeight,
-            footerBarHeight: footerBarHeight,
-            pages: pages,
-            pageProgress: _pageProgress,
-            startIndex: startIndex,
-          ),
-          // progress indicator background
-          Positioned(
-            top: statusBarHeight,
-            left: 0.0,
-            child: Container(
-              color: _kProgressBackgroundColor,
-              width: screenWidth,
-              height: progressIndicatorHeight,
+    return Scaffold(
+      body: SizedBox.expand(
+        child: Stack(
+          children: <Widget>[
+            _PageControllers(
+              pageWidth: screenWidth,
+              pageHeight: screenHeight,
+              statusBarHeight: statusBarHeight,
+              footerBarHeight: footerBarHeight,
+              pages: pages,
+              pageProgress: _pageProgress,
+              startIndex: startIndex,
             ),
-          ),
-          // progress indicator
-          Positioned(
-            top: statusBarHeight,
-            left: 0.0,
-            child: Container(
-              color: progressIndicatorColor,
-              width: ((_pageProgress.value + 1) / pages.length) * screenWidth,
-              height: progressIndicatorHeight,
+            // progress indicator background
+            Positioned(
+              top: statusBarHeight,
+              left: 0.0,
+              child: Container(
+                color: _kProgressBackgroundColor,
+                width: screenWidth,
+                height: progressIndicatorHeight,
+              ),
             ),
-          ),
-        ],
+            // progress indicator
+            Positioned(
+              top: statusBarHeight,
+              left: 0.0,
+              child: Container(
+                color: progressIndicatorColor,
+                width: ((_pageProgress.value + 1) / pages.length) * screenWidth,
+                height: progressIndicatorHeight,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
