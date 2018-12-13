@@ -4,7 +4,13 @@ import 'package:page_forms/page_forms.dart';
 
 void main() => runApp(MyApp());
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+
+  @override
+  MyAppState createState() => MyAppState();
+}
+
+class MyAppState extends State<MyApp> {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -28,7 +34,14 @@ class MyApp extends StatelessWidget {
           PageField(
             color: Colors.green,
             child: Center(
-              child: Text('Page 1'),
+              child: TextField(
+                keyboardType: TextInputType.text,
+                cursorWidth: 4.0,
+                decoration: InputDecoration(
+                  labelText: 'Full Name',
+                  helperText: 'Please enter your full name here',
+                ),
+              ),
             ),
           ),
           PageField(
@@ -40,7 +53,13 @@ class MyApp extends StatelessWidget {
           PageField(
             color: Colors.red,
             child: Center(
-              child: Text('Page 3'),
+              child: TextField(
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  helperText: 'Enter your email address'
+                ),
+              ),
             ),
           ),
         ],
