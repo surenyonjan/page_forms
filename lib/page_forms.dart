@@ -75,48 +75,73 @@ class PageFormsState extends State<PageForms> with SingleTickerProviderStateMixi
 
   @override
   Widget build(BuildContext cxt) {
+    final ThemeData themeData = Theme.of(cxt);
     final MediaQueryData mediaQueryData = MediaQuery.of(cxt);
     final screenWidth = mediaQueryData.size.width;
     final screenHeight = mediaQueryData.size.height;
     final statusBarHeight = mediaQueryData.padding.top;
     return Scaffold(
-      body: SizedBox.fromSize(
-        size: Size(screenWidth, screenHeight),
-        child: Stack(
-          children: <Widget>[
-            _PageControllers(
-              pageWidth: screenWidth,
-              pageHeight: screenHeight,
-              statusBarHeight: statusBarHeight,
-              footerBarHeight: footerBarHeight,
-              pages: pages,
-              pageProgress: _pageProgress,
-              startIndex: startIndex,
+      body: Theme(
+        data: themeData.copyWith(
+          cursorColor: Colors.white,
+          dividerColor: Colors.white,
+          textSelectionColor: Colors.white,
+          textTheme: themeData.textTheme.copyWith(
+            subhead: TextStyle(color: Colors.white, fontSize: 20.0),
+          ),
+          inputDecorationTheme: InputDecorationTheme(
+            labelStyle: TextStyle(color: Colors.white),
+            helperStyle: TextStyle(color: Colors.white),
+            hintStyle: TextStyle(color: Colors.grey),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.white),
             ),
-            // progress indicator background
-            Positioned(
-              top: statusBarHeight,
-              left: 0.0,
-              child: Opacity(
-                opacity: 0.3,
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.white),
+            ),
+            border: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.white),
+            ),
+          ),
+        ),
+        child: SizedBox.fromSize(
+          size: Size(screenWidth, screenHeight),
+          child: Stack(
+            children: <Widget>[
+              _PageControllers(
+                pageWidth: screenWidth,
+                pageHeight: screenHeight,
+                statusBarHeight: statusBarHeight,
+                footerBarHeight: footerBarHeight,
+                pages: pages,
+                pageProgress: _pageProgress,
+                startIndex: startIndex,
+              ),
+              // progress indicator background
+              Positioned(
+                top: statusBarHeight,
+                left: 0.0,
+                child: Opacity(
+                  opacity: 0.3,
+                  child: Container(
+                    color: _kProgressBackgroundColor,
+                    width: screenWidth,
+                    height: progressIndicatorHeight,
+                  ),
+                ),
+              ),
+              // progress indicator
+              Positioned(
+                top: statusBarHeight,
+                left: 0.0,
                 child: Container(
-                  color: _kProgressBackgroundColor,
-                  width: screenWidth,
+                  color: progressIndicatorColor,
+                  width: ((_pageProgress.value + 1) / pages.length) * screenWidth,
                   height: progressIndicatorHeight,
                 ),
               ),
-            ),
-            // progress indicator
-            Positioned(
-              top: statusBarHeight,
-              left: 0.0,
-              child: Container(
-                color: progressIndicatorColor,
-                width: ((_pageProgress.value + 1) / pages.length) * screenWidth,
-                height: progressIndicatorHeight,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
