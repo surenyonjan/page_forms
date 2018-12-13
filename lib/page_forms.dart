@@ -80,7 +80,8 @@ class PageFormsState extends State<PageForms> with SingleTickerProviderStateMixi
     final screenHeight = mediaQueryData.size.height;
     final statusBarHeight = mediaQueryData.padding.top;
     return Scaffold(
-      body: SizedBox.expand(
+      body: SizedBox.fromSize(
+        size: Size(screenWidth, screenHeight),
         child: Stack(
           children: <Widget>[
             _PageControllers(
