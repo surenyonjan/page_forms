@@ -13,7 +13,7 @@ final ThemeData _kThemeData = ThemeData(
     ),
   ),
 );
-final double _kProgressIndicatorHeight = 10.0;
+final double _kProgressIndicatorHeight = 7.0;
 final Color _kProgressIndicatorColor = Colors.blue;
 final Color _kProgressBackgroundColor = Colors.blueGrey;
 final double _kFooterBarheight = 120.0;
