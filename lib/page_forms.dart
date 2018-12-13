@@ -185,6 +185,47 @@ class _PageControllersState extends State<_PageControllers> with SingleTickerPro
           pageProgress: pageProgress.value,
         ),
         children: List.generate(pages.length, (int pageIndex) {
+          final bool shouldShowNextButton = pageIndex < pages.length - 1;
+          final bool shouldShowBackButton = pageIndex > 0;
+
+          List<Widget> footerActions = [];
+
+          if (shouldShowBackButton) {
+            footerActions.add(GestureDetector(
+              child: Container(
+                width: 120.0,
+                height: 120.0,
+                child: Center(
+                  child: Text(
+                    'Back',
+                    style: _kThemeData.textTheme.button,
+                  ),
+                ),
+              ),
+              onTapUp: (_) {
+                pageProgress.animateTo((pageIndex - 1).toDouble());
+              },
+            ));
+          }
+
+          if (shouldShowNextButton) {
+            footerActions.add(GestureDetector(
+              child: Container(
+                width: 120.0,
+                height: 120.0,
+                child: Center(
+                  child: Text(
+                    'Next',
+                    style: _kThemeData.textTheme.button,
+                  ),
+                ),
+              ),
+              onTapUp: (_) {
+                pageProgress.animateTo((pageIndex + 1).toDouble());
+              },
+            ));
+          }
+
           return LayoutId(
             id: 'page$pageIndex',
             child: Container(
@@ -204,15 +245,14 @@ class _PageControllersState extends State<_PageControllers> with SingleTickerPro
                     ),
                   ),
                   Container(
-                    height: 120.0,
-                    child: GestureDetector(
-                      child: Center(
-                        child: Text('Next'),
-                      ),
-                      onTapUp: (_) {
-                        pageProgress.animateTo((pageIndex + 1).toDouble());
-                      },
-                    )
+                    child: Row(
+                      mainAxisAlignment: !shouldShowBackButton
+                        ? MainAxisAlignment.end
+                        : !shouldShowNextButton
+                            ? MainAxisAlignment.start
+                            : MainAxisAlignment.spaceBetween,
+                      children: footerActions,
+                    ),
                   )
                 ],
               ),
