@@ -80,7 +80,7 @@ class PageFormsState extends State<PageForms> with SingleTickerProviderStateMixi
             subhead: TextStyle(color: Colors.white, fontSize: 20.0),
             button: TextStyle(
               color: Colors.white,
-              fontSize: 14.0,
+              fontSize: 23.0,
               fontWeight: FontWeight.normal,
               wordSpacing: 1.5,
               decoration: TextDecoration.none,
@@ -230,7 +230,7 @@ class _PageControllersState extends State<_PageControllers> with SingleTickerPro
           final bool shouldShowBackButton = pageIndex > 0;
 
           List<Widget> footerActions = [];
-          final double footerActionButtonHeight = footerBarHeight - (footerBarPadding * 2);
+          final double footerActionButtonHeight = footerBarHeight - (footerBarPadding * 7);
 
           if (shouldShowBackButton) {
             footerActions.add(Padding(
@@ -259,10 +259,14 @@ class _PageControllersState extends State<_PageControllers> with SingleTickerPro
                 child: Container(
                   width: 120.0,
                   height: footerActionButtonHeight,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.all(Radius.circular(6.0))
+                  ),
                   child: Center(
                     child: Text(
                       'Next',
-                      style: themeData.textTheme.button,
+                      style: themeData.textTheme.button.copyWith(color: pages[pageIndex].color),
                     ),
                   ),
                 ),
