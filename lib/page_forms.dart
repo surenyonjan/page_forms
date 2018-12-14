@@ -152,16 +152,16 @@ class PageFormsState extends State<PageForms> with SingleTickerProviderStateMixi
   }
 }
 
-class PageField {
+class PageField<T> {
 
   final Color color;
   final Widget child;
-  final bool nextEnabled;
+  final Stream<T> fieldStream;
 
   PageField({
     @required this.color,
     @required this.child,
-    this.nextEnabled = false,
+    @required this.fieldStream,
   });
 }
 
@@ -265,32 +265,36 @@ class _PageControllersState extends State<_PageControllers> with SingleTickerPro
             ));
           }
 
-          Widget nextButton = Container(
-            width: 120.0,
-            height: footerActionButtonHeight,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.all(Radius.circular(6.0))
-            ),
-            child: Center(
-              child: Text(
-                isLastPage ? 'Submit' : 'Next',
-                style: themeData.textTheme.button.copyWith(color: pages[pageIndex].color),
-              ),
-            ),
+          Widget nextButton = StreamBuilder(
+            stream: pages[pageIndex].fieldStream,
+            builder: (BuildContext nextBtnCxt, AsyncSnapshot nextBtnSnapshot) {
+              Widget _nextButton =  Container(
+                width: 120.0,
+                height: footerActionButtonHeight,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.all(Radius.circular(6.0))
+                ),
+                child: Center(
+                  child: Text(
+                    isLastPage ? 'Submit' : 'Next',
+                    style: themeData.textTheme.button.copyWith(color: pages[pageIndex].color),
+                  ),
+                ),
+              );
+
+              return nextBtnSnapshot.hasData && !nextBtnSnapshot.hasError
+                ? GestureDetector(
+                    onTapUp: (_) => isLastPage ? onSubmit() : pageProgress.animateTo((pageIndex + 1).toDouble()),
+                    child: _nextButton,
+                  )
+                : Opacity(
+                    opacity: 0.5,
+                    child: _nextButton,
+                  );
+            },
           );
 
-          if (pages[pageIndex].nextEnabled) {
-            nextButton = GestureDetector(
-              onTapUp: (_) => isLastPage ? onSubmit() : pageProgress.animateTo((pageIndex + 1).toDouble()),
-              child: nextButton,
-            );
-          } else {
-            nextButton = Opacity(
-              opacity: 0.5,
-              child: nextButton,
-            );
-          }
           footerActions.add(Padding(
             padding: EdgeInsets.symmetric(vertical: footerBarPadding, horizontal: footerBarPadding),
             child: nextButton,
