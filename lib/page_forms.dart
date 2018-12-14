@@ -13,13 +13,16 @@ class PageForms extends StatefulWidget {
   final int startIndex;
   final double progressIndicatorHeight;
   final double footerBarHeight;
+  final VoidCallback onSubmit;
 
   PageForms({
     this.pages,
     this.startIndex,
     this.footerBarHeight = _kFooterBarheight,
     this.progressIndicatorHeight = _kProgressIndicatorHeight,
-  }) : assert(startIndex < pages.length, 'Page start index out of range');
+    @required this.onSubmit,
+  }) : assert(onSubmit != null),
+       assert(startIndex < pages.length, 'Page start index out of range');
 
   @override
   PageFormsState createState() => PageFormsState(
@@ -28,6 +31,7 @@ class PageForms extends StatefulWidget {
     footerBarHeight: _kFooterBarheight,
     pages: pages,
     startIndex: startIndex,
+    onSubmit: onSubmit,
   );
 }
 
@@ -38,6 +42,7 @@ class PageFormsState extends State<PageForms> with SingleTickerProviderStateMixi
   final double footerBarHeight;
   final List<PageField> pages;
   final int startIndex;
+  final VoidCallback onSubmit;
 
   AnimationController _pageProgress;
   PageFormsState({
@@ -46,6 +51,7 @@ class PageFormsState extends State<PageForms> with SingleTickerProviderStateMixi
     @required this.footerBarHeight,
     @required this.pages,
     @required this.startIndex,
+    @required this.onSubmit,
   });
 
   @override
@@ -113,6 +119,7 @@ class PageFormsState extends State<PageForms> with SingleTickerProviderStateMixi
                 pages: pages,
                 pageProgress: _pageProgress,
                 startIndex: startIndex,
+                onSubmit: onSubmit,
               ),
               // progress indicator background
               Positioned(
@@ -165,6 +172,7 @@ class _PageControllers extends StatefulWidget {
   final List<PageField> pages;
   final double statusBarHeight;
   final double footerBarHeight;
+  final VoidCallback onSubmit;
   int currentIndex;
   AnimationController pageProgress;
 
@@ -175,6 +183,7 @@ class _PageControllers extends StatefulWidget {
     @required this.statusBarHeight,
     @required this.footerBarHeight,
     @required this.pageProgress,
+    @required this.onSubmit,
     int startIndex = 0,
   }) {
     currentIndex = startIndex;
@@ -189,6 +198,7 @@ class _PageControllers extends StatefulWidget {
     footerBarHeight: footerBarHeight,
     currentIndex: currentIndex,
     pageProgress: pageProgress,
+    onSubmit: onSubmit,
   );
 }
 
@@ -200,6 +210,7 @@ class _PageControllersState extends State<_PageControllers> with SingleTickerPro
   final double statusBarHeight;
   final double footerBarHeight;
   final int currentIndex;
+  final VoidCallback onSubmit;
   AnimationController pageProgress;
 
   final double footerBarPadding = 10.0;
@@ -212,6 +223,7 @@ class _PageControllersState extends State<_PageControllers> with SingleTickerPro
     @required this.footerBarHeight,
     @required this.currentIndex,
     @required this.pageProgress,
+    @required this.onSubmit,
   }) : assert(footerBarHeight > 100.0);
 
   @override
@@ -228,8 +240,8 @@ class _PageControllersState extends State<_PageControllers> with SingleTickerPro
           pageProgress: pageProgress.value,
         ),
         children: List.generate(pages.length, (int pageIndex) {
-          final bool shouldShowNextButton = pageIndex < pages.length - 1;
           final bool shouldShowBackButton = pageIndex > 0;
+          final bool isLastPage = pageIndex == pages.length - 1;
 
           List<Widget> footerActions = [];
           final double footerActionButtonHeight = footerBarHeight - (footerBarPadding * 7);
@@ -253,38 +265,36 @@ class _PageControllersState extends State<_PageControllers> with SingleTickerPro
             ));
           }
 
-          if (shouldShowNextButton) {
-            Widget nextButton = Container(
-              width: 120.0,
-              height: footerActionButtonHeight,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.all(Radius.circular(6.0))
+          Widget nextButton = Container(
+            width: 120.0,
+            height: footerActionButtonHeight,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.all(Radius.circular(6.0))
+            ),
+            child: Center(
+              child: Text(
+                isLastPage ? 'Submit' : 'Next',
+                style: themeData.textTheme.button.copyWith(color: pages[pageIndex].color),
               ),
-              child: Center(
-                child: Text(
-                  'Next',
-                  style: themeData.textTheme.button.copyWith(color: pages[pageIndex].color),
-                ),
-              ),
-            );
+            ),
+          );
 
-            if (pages[pageIndex].nextEnabled) {
-              nextButton = GestureDetector(
-                onTapUp: (_) => pageProgress.animateTo((pageIndex + 1).toDouble()),
-                child: nextButton,
-              );
-            } else {
-              nextButton = Opacity(
-                opacity: 0.5,
-                child: nextButton,
-              );
-            }
-            footerActions.add(Padding(
-              padding: EdgeInsets.symmetric(vertical: footerBarPadding, horizontal: footerBarPadding),
+          if (pages[pageIndex].nextEnabled) {
+            nextButton = GestureDetector(
+              onTapUp: (_) => isLastPage ? onSubmit() : pageProgress.animateTo((pageIndex + 1).toDouble()),
               child: nextButton,
-            ));
+            );
+          } else {
+            nextButton = Opacity(
+              opacity: 0.5,
+              child: nextButton,
+            );
           }
+          footerActions.add(Padding(
+            padding: EdgeInsets.symmetric(vertical: footerBarPadding, horizontal: footerBarPadding),
+            child: nextButton,
+          ));
 
           return LayoutId(
             id: 'page$pageIndex',
@@ -309,9 +319,7 @@ class _PageControllersState extends State<_PageControllers> with SingleTickerPro
                     child: Row(
                       mainAxisAlignment: !shouldShowBackButton
                         ? MainAxisAlignment.end
-                        : !shouldShowNextButton
-                            ? MainAxisAlignment.start
-                            : MainAxisAlignment.spaceBetween,
+                        : MainAxisAlignment.spaceBetween,
                       children: footerActions,
                     ),
                   )
