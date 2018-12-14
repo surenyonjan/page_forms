@@ -1,36 +1,27 @@
 
 import 'package:flutter/material.dart';
 
-final ThemeData _kThemeData = ThemeData(
-  primarySwatch: Colors.blue,
-  textTheme: TextTheme(
-    button: TextStyle(
-      color: Colors.white,
-      fontSize: 14.0,
-      fontWeight: FontWeight.normal,
-      wordSpacing: 1.5,
-      decoration: TextDecoration.none,
-    ),
-  ),
-);
-final double _kProgressIndicatorHeight = 7.0;
+const double _kProgressIndicatorHeight = 7.0;
 final Color _kProgressIndicatorColor = Colors.white;
 final Color _kProgressBackgroundColor = Colors.blueGrey;
-final double _kFooterBarheight = 120.0;
+const double _kFooterBarheight = 120.0;
 
 class PageForms extends StatefulWidget {
 
   final List<PageField> pages;
   final int startIndex;
+  final double progressIndicatorHeight;
+  final double footerBarHeight;
 
   PageForms({
     this.pages,
     this.startIndex,
+    this.footerBarHeight = _kFooterBarheight,
+    this.progressIndicatorHeight = _kProgressIndicatorHeight,
   }) : assert(startIndex < pages.length, 'Page start index out of range');
 
   @override
   PageFormsState createState() => PageFormsState(
-    themeData: _kThemeData,
     progressIndicatorHeight: _kProgressIndicatorHeight,
     progressIndicatorColor: _kProgressIndicatorColor,
     footerBarHeight: _kFooterBarheight,
@@ -41,7 +32,6 @@ class PageForms extends StatefulWidget {
 
 class PageFormsState extends State<PageForms> with SingleTickerProviderStateMixin {
 
-  final ThemeData themeData;
   final double progressIndicatorHeight;
   final Color progressIndicatorColor;
   final double footerBarHeight;
@@ -50,7 +40,6 @@ class PageFormsState extends State<PageForms> with SingleTickerProviderStateMixi
 
   AnimationController _pageProgress;
   PageFormsState({
-    @required this.themeData,
     @required this.progressIndicatorHeight,
     @required this.progressIndicatorColor,
     @required this.footerBarHeight,
@@ -88,6 +77,13 @@ class PageFormsState extends State<PageForms> with SingleTickerProviderStateMixi
           textSelectionColor: Colors.white,
           textTheme: themeData.textTheme.copyWith(
             subhead: TextStyle(color: Colors.white, fontSize: 20.0),
+            button: TextStyle(
+              color: Colors.white,
+              fontSize: 14.0,
+              fontWeight: FontWeight.normal,
+              wordSpacing: 1.5,
+              decoration: TextDecoration.none,
+            ),
           ),
           inputDecorationTheme: InputDecorationTheme(
             labelStyle: TextStyle(color: Colors.white),
@@ -217,6 +213,7 @@ class _PageControllersState extends State<_PageControllers> with SingleTickerPro
 
   @override
   Widget build(BuildContext cxt) {
+    final ThemeData themeData = Theme.of(cxt);
     return Container(
       width: pageWidth * 2,
       height: pageHeight,
@@ -245,7 +242,7 @@ class _PageControllersState extends State<_PageControllers> with SingleTickerPro
                   child: Center(
                     child: Text(
                       'Back',
-                      style: _kThemeData.textTheme.button,
+                      style: themeData.textTheme.button,
                     ),
                   ),
                 ),
@@ -264,7 +261,7 @@ class _PageControllersState extends State<_PageControllers> with SingleTickerPro
                   child: Center(
                     child: Text(
                       'Next',
-                      style: _kThemeData.textTheme.button,
+                      style: themeData.textTheme.button,
                     ),
                   ),
                 ),
