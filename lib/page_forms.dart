@@ -149,10 +149,12 @@ class PageField {
 
   final Color color;
   final Widget child;
+  final bool nextEnabled;
 
   PageField({
     @required this.color,
     @required this.child,
+    this.nextEnabled = false,
   });
 }
 
@@ -252,25 +254,35 @@ class _PageControllersState extends State<_PageControllers> with SingleTickerPro
           }
 
           if (shouldShowNextButton) {
-            footerActions.add(Padding(
-              padding: EdgeInsets.symmetric(vertical: footerBarPadding, horizontal: footerBarPadding),
-              child: GestureDetector(
-                onTapUp: (_) => pageProgress.animateTo((pageIndex + 1).toDouble()),
-                child: Container(
-                  width: 120.0,
-                  height: footerActionButtonHeight,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.all(Radius.circular(6.0))
-                  ),
-                  child: Center(
-                    child: Text(
-                      'Next',
-                      style: themeData.textTheme.button.copyWith(color: pages[pageIndex].color),
-                    ),
-                  ),
+            Widget nextButton = Container(
+              width: 120.0,
+              height: footerActionButtonHeight,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.all(Radius.circular(6.0))
+              ),
+              child: Center(
+                child: Text(
+                  'Next',
+                  style: themeData.textTheme.button.copyWith(color: pages[pageIndex].color),
                 ),
               ),
+            );
+
+            if (pages[pageIndex].nextEnabled) {
+              nextButton = GestureDetector(
+                onTapUp: (_) => pageProgress.animateTo((pageIndex + 1).toDouble()),
+                child: nextButton,
+              );
+            } else {
+              nextButton = Opacity(
+                opacity: 0.5,
+                child: nextButton,
+              );
+            }
+            footerActions.add(Padding(
+              padding: EdgeInsets.symmetric(vertical: footerBarPadding, horizontal: footerBarPadding),
+              child: nextButton,
             ));
           }
 
