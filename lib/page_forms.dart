@@ -56,7 +56,7 @@ class PageFormsState extends State<PageForms> with SingleTickerProviderStateMixi
       lowerBound: 0.0,
       upperBound: (pages.length - 1).toDouble(),
       vsync: this,
-      duration: Duration(milliseconds: 1000),
+      duration: Duration(milliseconds: 500),
     );
     _pageProgress.addListener(() {
       setState(() {});
