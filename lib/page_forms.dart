@@ -7,13 +7,17 @@ final Color _kProgressIndicatorColor = Colors.white;
 final Color _kProgressBackgroundColor = Colors.blueGrey;
 const double _kFooterBarheight = 120.0;
 
-class PageForms extends StatefulWidget {
+enum PageFormStates { Initializing, InitializingError, Disabled, Enabled, Submiting, SubmitError, Submitted }
+
+class PageForms<T> extends StatefulWidget {
 
   final List<PageField> pages;
   final int startIndex;
   final double progressIndicatorHeight;
   final double footerBarHeight;
-  final VoidCallback onSubmit;
+  final void Function(T) onSubmit;
+  final Stream<PageFormStates> stateStream;
+  final Stream<T> dataStream;
 
   PageForms({
     this.pages,
@@ -21,28 +25,33 @@ class PageForms extends StatefulWidget {
     this.footerBarHeight = _kFooterBarheight,
     this.progressIndicatorHeight = _kProgressIndicatorHeight,
     @required this.onSubmit,
-  }) : assert(onSubmit != null),
-       assert(startIndex < pages.length, 'Page start index out of range');
+    @required this.stateStream,
+    @required this.dataStream,
+  }) : assert(startIndex < pages.length, 'Page start index out of range');
 
   @override
-  PageFormsState createState() => PageFormsState(
+  PageFormsState createState() => PageFormsState<T>(
     progressIndicatorHeight: _kProgressIndicatorHeight,
     progressIndicatorColor: _kProgressIndicatorColor,
     footerBarHeight: _kFooterBarheight,
     pages: pages,
     startIndex: startIndex,
     onSubmit: onSubmit,
+    dataStream: dataStream,
+    stateStream: stateStream,
   );
 }
 
-class PageFormsState extends State<PageForms> with SingleTickerProviderStateMixin {
+class PageFormsState<T> extends State<PageForms> with SingleTickerProviderStateMixin {
 
   final double progressIndicatorHeight;
   final Color progressIndicatorColor;
   final double footerBarHeight;
   final List<PageField> pages;
   final int startIndex;
-  final VoidCallback onSubmit;
+  final void Function(T) onSubmit;
+  final Stream<PageFormStates> stateStream;
+  final Stream<T> dataStream;
 
   AnimationController _pageProgress;
   PageFormsState({
@@ -52,6 +61,8 @@ class PageFormsState extends State<PageForms> with SingleTickerProviderStateMixi
     @required this.pages,
     @required this.startIndex,
     @required this.onSubmit,
+    @required this.stateStream,
+    @required this.dataStream,
   });
 
   @override
@@ -111,7 +122,7 @@ class PageFormsState extends State<PageForms> with SingleTickerProviderStateMixi
           size: Size(screenWidth, screenHeight),
           child: Stack(
             children: <Widget>[
-              _PageControllers(
+              _PageControllers<T>(
                 pageWidth: screenWidth,
                 pageHeight: screenHeight,
                 statusBarHeight: statusBarHeight,
@@ -120,6 +131,8 @@ class PageFormsState extends State<PageForms> with SingleTickerProviderStateMixi
                 pageProgress: _pageProgress,
                 startIndex: startIndex,
                 onSubmit: onSubmit,
+                stateStream: stateStream,
+                dataStream: dataStream,
               ),
               // progress indicator background
               Positioned(
@@ -165,14 +178,16 @@ class PageField<T> {
   });
 }
 
-class _PageControllers extends StatefulWidget {
+class _PageControllers<T> extends StatefulWidget {
 
   final double pageWidth;
   final double pageHeight;
   final List<PageField> pages;
   final double statusBarHeight;
   final double footerBarHeight;
-  final VoidCallback onSubmit;
+  final void Function(T) onSubmit;
+  final Stream<PageFormStates> stateStream;
+  final Stream<T> dataStream;
   int currentIndex;
   AnimationController pageProgress;
 
@@ -184,13 +199,15 @@ class _PageControllers extends StatefulWidget {
     @required this.footerBarHeight,
     @required this.pageProgress,
     @required this.onSubmit,
+    @required this.stateStream,
+    @required this.dataStream,
     int startIndex = 0,
   }) {
     currentIndex = startIndex;
   }
 
   @override
-  _PageControllersState createState() => _PageControllersState(
+  _PageControllersState createState() => _PageControllersState<T>(
     pageWidth: pageWidth,
     pageHeight: pageHeight,
     pages: pages,
@@ -199,10 +216,12 @@ class _PageControllers extends StatefulWidget {
     currentIndex: currentIndex,
     pageProgress: pageProgress,
     onSubmit: onSubmit,
+    dataStream: dataStream,
+    stateStream: stateStream,
   );
 }
 
-class _PageControllersState extends State<_PageControllers> with SingleTickerProviderStateMixin {
+class _PageControllersState<T> extends State<_PageControllers> with SingleTickerProviderStateMixin {
 
   final double pageWidth;
   final double pageHeight;
@@ -210,7 +229,9 @@ class _PageControllersState extends State<_PageControllers> with SingleTickerPro
   final double statusBarHeight;
   final double footerBarHeight;
   final int currentIndex;
-  final VoidCallback onSubmit;
+  final void Function(T) onSubmit;
+  final Stream<PageFormStates> stateStream;
+  final Stream<T> dataStream;
   AnimationController pageProgress;
 
   final double footerBarPadding = 10.0;
@@ -224,7 +245,43 @@ class _PageControllersState extends State<_PageControllers> with SingleTickerPro
     @required this.currentIndex,
     @required this.pageProgress,
     @required this.onSubmit,
+    @required this.stateStream,
+    @required this.dataStream,
   }) : assert(footerBarHeight > 100.0);
+
+  Widget buildNextButton(Widget nextButton, AsyncSnapshot nextBtnSnapshot, int nextIndex) {
+    return nextBtnSnapshot.hasData && !nextBtnSnapshot.hasError
+      ? GestureDetector(
+          onTapUp: (_) => pageProgress.animateTo(nextIndex.toDouble()),
+          child: nextButton,
+        )
+      : Opacity(
+          opacity: 0.5,
+          child: nextButton,
+        );
+  }
+
+  Widget buildSubmitButton(Widget nextButton) {
+    return StreamBuilder(
+      stream: dataStream,
+      builder: (BuildContext dataContext, AsyncSnapshot<T> dataSnapshot) {
+        return StreamBuilder(
+          stream: stateStream,
+          builder: (BuildContext stateCxt, AsyncSnapshot<PageFormStates> stateSnapshot) {
+            return stateSnapshot.hasData && !stateSnapshot.hasError
+              ? GestureDetector(
+                  onTapUp: (_) => onSubmit(dataSnapshot.data),
+                  child: nextButton,
+                )
+              : Opacity(
+                  opacity: 0.5,
+                  child: nextButton,
+                );
+          }
+        );
+      }
+    );
+  }
 
   @override
   Widget build(BuildContext cxt) {
@@ -265,39 +322,31 @@ class _PageControllersState extends State<_PageControllers> with SingleTickerPro
             ));
           }
 
-          Widget nextButton = StreamBuilder(
-            stream: pages[pageIndex].fieldStream,
-            builder: (BuildContext nextBtnCxt, AsyncSnapshot nextBtnSnapshot) {
-              Widget _nextButton =  Container(
-                width: 120.0,
-                height: footerActionButtonHeight,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.all(Radius.circular(6.0))
-                ),
-                child: Center(
-                  child: Text(
-                    isLastPage ? 'Submit' : 'Next',
-                    style: themeData.textTheme.button.copyWith(color: pages[pageIndex].color),
-                  ),
-                ),
-              );
-
-              return nextBtnSnapshot.hasData && !nextBtnSnapshot.hasError
-                ? GestureDetector(
-                    onTapUp: (_) => isLastPage ? onSubmit() : pageProgress.animateTo((pageIndex + 1).toDouble()),
-                    child: _nextButton,
-                  )
-                : Opacity(
-                    opacity: 0.5,
-                    child: _nextButton,
-                  );
-            },
+          Widget _nextButton = Container(
+            width: 120.0,
+            height: footerActionButtonHeight,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.all(Radius.circular(6.0))
+            ),
+            child: Center(
+              child: Text(
+                isLastPage ? 'Submit' : 'Next',
+                style: themeData.textTheme.button.copyWith(color: pages[pageIndex].color),
+              ),
+            ),
           );
 
           footerActions.add(Padding(
             padding: EdgeInsets.symmetric(vertical: footerBarPadding, horizontal: footerBarPadding),
-            child: nextButton,
+            child: isLastPage
+              ? buildSubmitButton(_nextButton)
+              : StreamBuilder(
+                  stream: pages[pageIndex].fieldStream,
+                  builder: (BuildContext nextBtnContext, AsyncSnapshot nextBtnSnapshot) {
+                    return buildNextButton(_nextButton, nextBtnSnapshot, pageIndex + 1);
+                  }
+                ),
           ));
 
           return LayoutId(
