@@ -16,6 +16,7 @@ class PageForms<T> extends StatefulWidget {
   final double progressIndicatorHeight;
   final double footerBarHeight;
   final void Function(T) onSubmit;
+  final VoidCallback onCancel;
   final Stream<PageFormStates> stateStream;
   final Stream<T> dataStream;
 
@@ -25,6 +26,7 @@ class PageForms<T> extends StatefulWidget {
     this.footerBarHeight = _kFooterBarheight,
     this.progressIndicatorHeight = _kProgressIndicatorHeight,
     @required this.onSubmit,
+    @required this.onCancel,
     @required this.stateStream,
     @required this.dataStream,
   }) : assert(startIndex < pages.length, 'Page start index out of range');
@@ -37,6 +39,7 @@ class PageForms<T> extends StatefulWidget {
     pages: pages,
     startIndex: startIndex,
     onSubmit: onSubmit,
+    onCancel: onCancel,
     dataStream: dataStream,
     stateStream: stateStream,
   );
@@ -50,6 +53,7 @@ class PageFormsState<T> extends State<PageForms> with SingleTickerProviderStateM
   final List<PageField> pages;
   final int startIndex;
   final void Function(T) onSubmit;
+  final VoidCallback onCancel;
   final Stream<PageFormStates> stateStream;
   final Stream<T> dataStream;
 
@@ -61,6 +65,7 @@ class PageFormsState<T> extends State<PageForms> with SingleTickerProviderStateM
     @required this.pages,
     @required this.startIndex,
     @required this.onSubmit,
+    @required this.onCancel,
     @required this.stateStream,
     @required this.dataStream,
   });
@@ -131,6 +136,7 @@ class PageFormsState<T> extends State<PageForms> with SingleTickerProviderStateM
                 pageProgress: _pageProgress,
                 startIndex: startIndex,
                 onSubmit: onSubmit,
+                onCancel: onCancel,
                 stateStream: stateStream,
                 dataStream: dataStream,
               ),
@@ -186,6 +192,7 @@ class _PageControllers<T> extends StatefulWidget {
   final double statusBarHeight;
   final double footerBarHeight;
   final void Function(T) onSubmit;
+  final VoidCallback onCancel;
   final Stream<PageFormStates> stateStream;
   final Stream<T> dataStream;
   int currentIndex;
@@ -199,6 +206,7 @@ class _PageControllers<T> extends StatefulWidget {
     @required this.footerBarHeight,
     @required this.pageProgress,
     @required this.onSubmit,
+    @required this.onCancel,
     @required this.stateStream,
     @required this.dataStream,
     int startIndex = 0,
@@ -216,6 +224,7 @@ class _PageControllers<T> extends StatefulWidget {
     currentIndex: currentIndex,
     pageProgress: pageProgress,
     onSubmit: onSubmit,
+    onCancel: onCancel,
     dataStream: dataStream,
     stateStream: stateStream,
   );
@@ -230,6 +239,7 @@ class _PageControllersState<T> extends State<_PageControllers> with SingleTicker
   final double footerBarHeight;
   final int currentIndex;
   final void Function(T) onSubmit;
+  final VoidCallback onCancel;
   final Stream<PageFormStates> stateStream;
   final Stream<T> dataStream;
   AnimationController pageProgress;
@@ -245,6 +255,7 @@ class _PageControllersState<T> extends State<_PageControllers> with SingleTicker
     @required this.currentIndex,
     @required this.pageProgress,
     @required this.onSubmit,
+    @required this.onCancel,
     @required this.stateStream,
     @required this.dataStream,
   }) : assert(footerBarHeight > 100.0);
@@ -297,30 +308,28 @@ class _PageControllersState<T> extends State<_PageControllers> with SingleTicker
           pageProgress: pageProgress.value,
         ),
         children: List.generate(pages.length, (int pageIndex) {
-          final bool shouldShowBackButton = pageIndex > 0;
+          final bool isStartingPage = pageIndex == 0;
           final bool isLastPage = pageIndex == pages.length - 1;
 
           List<Widget> footerActions = [];
           final double footerActionButtonHeight = footerBarHeight - (footerBarPadding * 7);
 
-          if (shouldShowBackButton) {
-            footerActions.add(Padding(
-              padding: EdgeInsets.symmetric(vertical: footerBarPadding, horizontal: footerBarPadding),
-              child: GestureDetector(
-                onTapUp: (_) => pageProgress.animateTo((pageIndex - 1).toDouble()),
-                child: Container(
-                  width: 120.0,
-                  height: footerActionButtonHeight,
-                  child: Center(
-                    child: Text(
-                      'Back',
-                      style: themeData.textTheme.button,
-                    ),
+          footerActions.add(Padding(
+            padding: EdgeInsets.symmetric(vertical: footerBarPadding, horizontal: footerBarPadding),
+            child: GestureDetector(
+              onTapUp: (_) => !isStartingPage ? pageProgress.animateTo((pageIndex - 1).toDouble()) : onCancel(),
+              child: Container(
+                width: 120.0,
+                height: footerActionButtonHeight,
+                child: Center(
+                  child: Text(
+                    !isStartingPage ? 'Back' : 'Cancel',
+                    style: themeData.textTheme.button,
                   ),
                 ),
               ),
-            ));
-          }
+            ),
+          ));
 
           Widget _nextButton = Container(
             width: 120.0,
@@ -370,9 +379,7 @@ class _PageControllersState<T> extends State<_PageControllers> with SingleTicker
                   Container(
                     height: footerBarHeight,
                     child: Row(
-                      mainAxisAlignment: !shouldShowBackButton
-                        ? MainAxisAlignment.end
-                        : MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: footerActions,
                     ),
                   )
