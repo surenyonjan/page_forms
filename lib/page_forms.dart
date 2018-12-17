@@ -2,9 +2,10 @@ library page_forms;
 
 import 'package:flutter/material.dart';
 
+const int _kStartIndex = 0;
 const double _kProgressIndicatorHeight = 7.0;
-final Color _kProgressIndicatorColor = Colors.white;
-final Color _kProgressBackgroundColor = Colors.blueGrey;
+const Color _kProgressIndicatorColor = Colors.white;
+const Color _kProgressBackgroundColor = Colors.blueGrey;
 const double _kFooterBarheight = 120.0;
 
 enum PageFormStates { Initializing, InitializingError, Disabled, Enabled, Submiting, SubmitError, Submitted }
@@ -19,12 +20,15 @@ class PageForms<T> extends StatefulWidget {
   final VoidCallback onCancel;
   final Stream<PageFormStates> stateStream;
   final Stream<T> dataStream;
+  final Color progressIndicatorColor;
+
 
   PageForms({
     this.pages,
-    this.startIndex,
+    this.startIndex = _kStartIndex,
     this.footerBarHeight = _kFooterBarheight,
     this.progressIndicatorHeight = _kProgressIndicatorHeight,
+    this.progressIndicatorColor = _kProgressIndicatorColor,
     @required this.onSubmit,
     @required this.onCancel,
     @required this.stateStream,
@@ -33,9 +37,9 @@ class PageForms<T> extends StatefulWidget {
 
   @override
   PageFormsState createState() => PageFormsState<T>(
-    progressIndicatorHeight: _kProgressIndicatorHeight,
-    progressIndicatorColor: _kProgressIndicatorColor,
-    footerBarHeight: _kFooterBarheight,
+    progressIndicatorHeight: progressIndicatorHeight,
+    progressIndicatorColor: progressIndicatorColor,
+    footerBarHeight: footerBarHeight,
     pages: pages,
     startIndex: startIndex,
     onSubmit: onSubmit,
