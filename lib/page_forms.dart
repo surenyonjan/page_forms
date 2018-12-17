@@ -24,11 +24,11 @@ class PageForms<T> extends StatefulWidget {
 
 
   PageForms({
-    this.pages,
     this.startIndex = _kStartIndex,
     this.footerBarHeight = _kFooterBarheight,
     this.progressIndicatorHeight = _kProgressIndicatorHeight,
     this.progressIndicatorColor = _kProgressIndicatorColor,
+    @required this.pages,
     @required this.onSubmit,
     @required this.onCancel,
     @required this.stateStream,
