@@ -1,82 +1,100 @@
 library page_forms;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+const int _kStartIndex = 0;
 const double _kProgressIndicatorHeight = 7.0;
-final Color _kProgressIndicatorColor = Colors.white;
-final Color _kProgressBackgroundColor = Colors.blueGrey;
+const Color _kProgressIndicatorColor = Colors.white;
+const Color _kProgressBackgroundColor = Colors.blueGrey;
 const double _kFooterBarheight = 120.0;
 
 enum PageFormStates { Initializing, InitializingError, Disabled, Enabled, Submiting, SubmitError, Submitted }
 
-class PageForms<T> extends StatefulWidget {
-
-  final List<PageField> pages;
+@immutable
+class PageFormData<T> extends Diagnosticable {
   final int startIndex;
   final double progressIndicatorHeight;
+  final Color progressIndicatorColor;
   final double footerBarHeight;
   final void Function(T) onSubmit;
   final VoidCallback onCancel;
   final Stream<PageFormStates> stateStream;
   final Stream<T> dataStream;
 
-  PageForms({
-    this.pages,
-    this.startIndex,
-    this.footerBarHeight = _kFooterBarheight,
+  PageFormData({
+    this.startIndex = _kStartIndex,
     this.progressIndicatorHeight = _kProgressIndicatorHeight,
+    this.progressIndicatorColor = _kProgressIndicatorColor,
+    this.footerBarHeight = _kFooterBarheight,
     @required this.onSubmit,
     @required this.onCancel,
     @required this.stateStream,
     @required this.dataStream,
-  }) : assert(startIndex < pages.length, 'Page start index out of range');
+  }) : assert(startIndex != null),
+       assert(footerBarHeight != null),
+       assert(progressIndicatorHeight != null),
+       assert(progressIndicatorColor != null),
+       assert(onSubmit != null),
+       assert(onCancel != null),
+       assert(stateStream != null),
+       assert(dataStream != null);
+}
+
+class _InheritedPageForm<T> extends InheritedWidget {
+
+  _InheritedPageForm({
+    Key key,
+    @required this.data,
+    @required Widget child,
+    @required this.pageProgress,
+  }): assert(data != null),
+      super(key: key, child: child);
+
+  final PageFormData<T> data;
+  final AnimationController pageProgress;
 
   @override
-  PageFormsState createState() => PageFormsState<T>(
-    progressIndicatorHeight: _kProgressIndicatorHeight,
-    progressIndicatorColor: _kProgressIndicatorColor,
-    footerBarHeight: _kFooterBarheight,
-    pages: pages,
-    startIndex: startIndex,
-    onSubmit: onSubmit,
-    onCancel: onCancel,
-    dataStream: dataStream,
-    stateStream: stateStream,
-  );
+  bool updateShouldNotify(_InheritedPageForm old) {
+    return old.data.startIndex != this.data.startIndex
+      || old.data.progressIndicatorColor != this.data.progressIndicatorColor
+      || old.data.progressIndicatorHeight != this.data.progressIndicatorHeight
+      || old.data.footerBarHeight != this.data.footerBarHeight;
+  }
+}
+
+class PageForms<T> extends StatefulWidget {
+
+  final List<PageField> pages;
+  final PageFormData<T> data;
+
+  PageForms({
+    @required this.data,
+    @required this.pages,
+  }) : assert(pages != null),
+       assert(data.startIndex < pages.length, 'Page start index out of range');
+
+  static PageFormData of(BuildContext cxt) {
+    final _InheritedPageForm inheritedPageForm = cxt.inheritFromWidgetOfExactType(_InheritedPageForm);
+    return inheritedPageForm.data;
+  }
+
+  @override
+  PageFormsState createState() => PageFormsState<T>();
 }
 
 class PageFormsState<T> extends State<PageForms> with SingleTickerProviderStateMixin {
 
-  final double progressIndicatorHeight;
-  final Color progressIndicatorColor;
-  final double footerBarHeight;
-  final List<PageField> pages;
-  final int startIndex;
-  final void Function(T) onSubmit;
-  final VoidCallback onCancel;
-  final Stream<PageFormStates> stateStream;
-  final Stream<T> dataStream;
-
   AnimationController _pageProgress;
-  PageFormsState({
-    @required this.progressIndicatorHeight,
-    @required this.progressIndicatorColor,
-    @required this.footerBarHeight,
-    @required this.pages,
-    @required this.startIndex,
-    @required this.onSubmit,
-    @required this.onCancel,
-    @required this.stateStream,
-    @required this.dataStream,
-  });
 
   @override
   void initState() {
     super.initState();
+    final startValue = widget.data.startIndex.toDouble();
     _pageProgress = AnimationController(
-      value: startIndex.toDouble(),
+      value: startValue,
       lowerBound: 0.0,
-      upperBound: (pages.length - 1).toDouble(),
+      upperBound: (widget.pages.length - 1).toDouble(),
       vsync: this,
       duration: Duration(milliseconds: 500),
     );
@@ -92,78 +110,75 @@ class PageFormsState<T> extends State<PageForms> with SingleTickerProviderStateM
     final screenWidth = mediaQueryData.size.width;
     final screenHeight = mediaQueryData.size.height;
     final statusBarHeight = mediaQueryData.padding.top;
-    return Scaffold(
-      body: Theme(
-        data: themeData.copyWith(
-          cursorColor: Colors.white,
-          dividerColor: Colors.white,
-          textSelectionColor: Colors.white,
-          textTheme: themeData.textTheme.copyWith(
-            subhead: TextStyle(color: Colors.white, fontSize: 20.0),
-            button: TextStyle(
-              color: Colors.white,
-              fontSize: 23.0,
-              fontWeight: FontWeight.normal,
-              wordSpacing: 1.5,
-              decoration: TextDecoration.none,
-            ),
-          ),
-          inputDecorationTheme: InputDecorationTheme(
-            labelStyle: TextStyle(color: Colors.white),
-            helperStyle: TextStyle(color: Colors.white),
-            hintStyle: TextStyle(color: Colors.grey),
-            focusedBorder: UnderlineInputBorder(
-              borderSide: BorderSide(color: Colors.white),
-            ),
-            enabledBorder: UnderlineInputBorder(
-              borderSide: BorderSide(color: Colors.white),
-            ),
-            border: UnderlineInputBorder(
-              borderSide: BorderSide(color: Colors.white),
-            ),
-          ),
-        ),
-        child: SizedBox.fromSize(
-          size: Size(screenWidth, screenHeight),
-          child: Stack(
-            children: <Widget>[
-              _PageControllers<T>(
-                pageWidth: screenWidth,
-                pageHeight: screenHeight,
-                statusBarHeight: statusBarHeight,
-                footerBarHeight: footerBarHeight,
-                pages: pages,
-                pageProgress: _pageProgress,
-                startIndex: startIndex,
-                onSubmit: onSubmit,
-                onCancel: onCancel,
-                stateStream: stateStream,
-                dataStream: dataStream,
+    return _InheritedPageForm(
+      data: widget.data,
+      pageProgress: _pageProgress,
+      child: Scaffold(
+        body: Theme(
+          data: themeData.copyWith(
+            cursorColor: Colors.white,
+            dividerColor: Colors.white,
+            textSelectionColor: Colors.white,
+            textTheme: themeData.textTheme.copyWith(
+              subhead: TextStyle(color: Colors.white, fontSize: 20.0),
+              button: TextStyle(
+                color: Colors.white,
+                fontSize: 23.0,
+                fontWeight: FontWeight.normal,
+                wordSpacing: 1.5,
+                decoration: TextDecoration.none,
               ),
-              // progress indicator background
-              Positioned(
-                top: statusBarHeight,
-                left: 0.0,
-                child: Opacity(
-                  opacity: 0.3,
-                  child: Container(
-                    color: _kProgressBackgroundColor,
-                    width: screenWidth,
-                    height: progressIndicatorHeight,
+            ),
+            inputDecorationTheme: InputDecorationTheme(
+              labelStyle: TextStyle(color: Colors.white),
+              helperStyle: TextStyle(color: Colors.white),
+              hintStyle: TextStyle(color: Colors.grey),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.white),
+              ),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.white),
+              ),
+              border: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.white),
+              ),
+            ),
+          ),
+          child: SizedBox.fromSize(
+            size: Size(screenWidth, screenHeight),
+            child: Stack(
+              children: <Widget>[
+                _PageControllers<T>(
+                  pageWidth: screenWidth,
+                  pageHeight: screenHeight,
+                  statusBarHeight: statusBarHeight,
+                  pages: widget.pages,
+                ),
+                // progress indicator background
+                Positioned(
+                  top: statusBarHeight,
+                  left: 0.0,
+                  child: Opacity(
+                    opacity: 0.3,
+                    child: Container(
+                      color: _kProgressBackgroundColor,
+                      width: screenWidth,
+                      height: widget.data.progressIndicatorHeight,
+                    ),
                   ),
                 ),
-              ),
-              // progress indicator
-              Positioned(
-                top: statusBarHeight,
-                left: 0.0,
-                child: Container(
-                  color: progressIndicatorColor,
-                  width: ((_pageProgress.value + 1) / pages.length) * screenWidth,
-                  height: progressIndicatorHeight,
+                // progress indicator
+                Positioned(
+                  top: statusBarHeight,
+                  left: 0.0,
+                  child: Container(
+                    color: widget.data.progressIndicatorColor,
+                    width: ((_pageProgress.value + 1) / widget.pages.length) * screenWidth,
+                    height: widget.data.progressIndicatorHeight,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -190,80 +205,28 @@ class _PageControllers<T> extends StatefulWidget {
   final double pageHeight;
   final List<PageField> pages;
   final double statusBarHeight;
-  final double footerBarHeight;
-  final void Function(T) onSubmit;
-  final VoidCallback onCancel;
-  final Stream<PageFormStates> stateStream;
-  final Stream<T> dataStream;
-  int currentIndex;
-  AnimationController pageProgress;
 
   _PageControllers({
     @required this.pageWidth,
     @required this.pageHeight,
     @required this.pages,
     @required this.statusBarHeight,
-    @required this.footerBarHeight,
-    @required this.pageProgress,
-    @required this.onSubmit,
-    @required this.onCancel,
-    @required this.stateStream,
-    @required this.dataStream,
-    int startIndex = 0,
-  }) {
-    currentIndex = startIndex;
-  }
+  });
 
   @override
-  _PageControllersState createState() => _PageControllersState<T>(
-    pageWidth: pageWidth,
-    pageHeight: pageHeight,
-    pages: pages,
-    statusBarHeight: statusBarHeight,
-    footerBarHeight: footerBarHeight,
-    currentIndex: currentIndex,
-    pageProgress: pageProgress,
-    onSubmit: onSubmit,
-    onCancel: onCancel,
-    dataStream: dataStream,
-    stateStream: stateStream,
-  );
+  _PageControllersState createState() => _PageControllersState<T>();
 }
 
 class _PageControllersState<T> extends State<_PageControllers> with SingleTickerProviderStateMixin {
 
-  final double pageWidth;
-  final double pageHeight;
-  final List<PageField> pages;
-  final double statusBarHeight;
-  final double footerBarHeight;
-  final int currentIndex;
-  final void Function(T) onSubmit;
-  final VoidCallback onCancel;
-  final Stream<PageFormStates> stateStream;
-  final Stream<T> dataStream;
-  AnimationController pageProgress;
-
   final double footerBarPadding = 10.0;
 
-  _PageControllersState({
-    @required this.pageWidth,
-    @required this.pageHeight,
-    @required this.pages,
-    @required this.statusBarHeight,
-    @required this.footerBarHeight,
-    @required this.currentIndex,
-    @required this.pageProgress,
-    @required this.onSubmit,
-    @required this.onCancel,
-    @required this.stateStream,
-    @required this.dataStream,
-  }) : assert(footerBarHeight > 100.0);
+  _PageControllersState();
 
-  Widget buildNextButton(Widget nextButton, AsyncSnapshot nextBtnSnapshot, int nextIndex) {
+  Widget _buildNextButton(Widget nextButton, AsyncSnapshot nextBtnSnapshot, AnimationController pageProgressController, int nextIndex) {
     return nextBtnSnapshot.hasData && !nextBtnSnapshot.hasError
       ? GestureDetector(
-          onTapUp: (_) => pageProgress.animateTo(nextIndex.toDouble()),
+          onTapUp: (_) => pageProgressController.animateTo(nextIndex.toDouble()),
           child: nextButton,
         )
       : Opacity(
@@ -272,16 +235,16 @@ class _PageControllersState<T> extends State<_PageControllers> with SingleTicker
         );
   }
 
-  Widget buildSubmitButton(Widget nextButton) {
-    return StreamBuilder(
-      stream: dataStream,
+  Widget _buildSubmitButton(Widget nextButton, PageFormData formData) {
+    return StreamBuilder<T>(
+      stream: formData.dataStream,
       builder: (BuildContext dataContext, AsyncSnapshot<T> dataSnapshot) {
-        return StreamBuilder(
-          stream: stateStream,
+        return StreamBuilder<PageFormStates>(
+          stream: formData.stateStream,
           builder: (BuildContext stateCxt, AsyncSnapshot<PageFormStates> stateSnapshot) {
             return stateSnapshot.hasData && !stateSnapshot.hasError
               ? GestureDetector(
-                  onTapUp: (_) => onSubmit(dataSnapshot.data),
+                  onTapUp: (_) => formData.onSubmit(dataSnapshot.data),
                   child: nextButton,
                 )
               : Opacity(
@@ -297,27 +260,29 @@ class _PageControllersState<T> extends State<_PageControllers> with SingleTicker
   @override
   Widget build(BuildContext cxt) {
     final ThemeData themeData = Theme.of(cxt);
+    final _InheritedPageForm inheritedPageForm = cxt.inheritFromWidgetOfExactType(_InheritedPageForm);
+    final PageFormData formData = inheritedPageForm.data;
     return Container(
-      width: pageWidth * 2,
-      height: pageHeight,
+      width: widget.pageWidth * 2,
+      height: widget.pageHeight,
       child: CustomMultiChildLayout(
         delegate: _PagesLayoutDelegate(
-          pageWidth: pageWidth,
-          pageHeight: pageHeight,
-          pageCount: pages.length,
-          pageProgress: pageProgress.value,
+          pageWidth: widget.pageWidth,
+          pageHeight: widget.pageHeight,
+          pageCount: widget.pages.length,
+          pageProgress: inheritedPageForm.pageProgress.value,
         ),
-        children: List.generate(pages.length, (int pageIndex) {
+        children: List.generate(widget.pages.length, (int pageIndex) {
           final bool isStartingPage = pageIndex == 0;
-          final bool isLastPage = pageIndex == pages.length - 1;
+          final bool isLastPage = pageIndex == widget.pages.length - 1;
 
           List<Widget> footerActions = [];
-          final double footerActionButtonHeight = footerBarHeight - (footerBarPadding * 7);
+          final double footerActionButtonHeight = formData.footerBarHeight - (footerBarPadding * 7);
 
           footerActions.add(Padding(
             padding: EdgeInsets.symmetric(vertical: footerBarPadding, horizontal: footerBarPadding),
             child: GestureDetector(
-              onTapUp: (_) => !isStartingPage ? pageProgress.animateTo((pageIndex - 1).toDouble()) : onCancel(),
+              onTapUp: (_) => !isStartingPage ? inheritedPageForm.pageProgress.animateTo((pageIndex - 1).toDouble()) : formData.onCancel(),
               child: Container(
                 width: 120.0,
                 height: footerActionButtonHeight,
@@ -341,7 +306,7 @@ class _PageControllersState<T> extends State<_PageControllers> with SingleTicker
             child: Center(
               child: Text(
                 isLastPage ? 'Submit' : 'Next',
-                style: themeData.textTheme.button.copyWith(color: pages[pageIndex].color),
+                style: themeData.textTheme.button.copyWith(color: widget.pages[pageIndex].color),
               ),
             ),
           );
@@ -349,11 +314,11 @@ class _PageControllersState<T> extends State<_PageControllers> with SingleTicker
           footerActions.add(Padding(
             padding: EdgeInsets.symmetric(vertical: footerBarPadding, horizontal: footerBarPadding),
             child: isLastPage
-              ? buildSubmitButton(_nextButton)
+              ? _buildSubmitButton(_nextButton, formData)
               : StreamBuilder(
-                  stream: pages[pageIndex].fieldStream,
+                  stream: widget.pages[pageIndex].fieldStream,
                   builder: (BuildContext nextBtnContext, AsyncSnapshot nextBtnSnapshot) {
-                    return buildNextButton(_nextButton, nextBtnSnapshot, pageIndex + 1);
+                    return _buildNextButton(_nextButton, nextBtnSnapshot, inheritedPageForm.pageProgress, pageIndex + 1);
                   }
                 ),
           ));
@@ -361,23 +326,23 @@ class _PageControllersState<T> extends State<_PageControllers> with SingleTicker
           return LayoutId(
             id: 'page$pageIndex',
             child: Container(
-              color: pages[pageIndex].color,
+              color: widget.pages[pageIndex].color,
               child: Column(
                 children: <Widget>[
                   Container(
-                    height: pageHeight - 120.0,
+                    height: widget.pageHeight - 120.0,
                     child: Padding(
                       padding: EdgeInsets.only(
-                        top: statusBarHeight,
+                        top: widget.statusBarHeight,
                         left: 12.0,
                         right: 12.0,
                         bottom: 30.0,
                       ),
-                      child: pages[pageIndex].child,
+                      child: widget.pages[pageIndex].child,
                     ),
                   ),
                   Container(
-                    height: footerBarHeight,
+                    height: formData.footerBarHeight,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: footerActions,

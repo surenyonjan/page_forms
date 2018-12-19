@@ -11,3 +11,7 @@ Required form data stream and form state stream. On submit callback will have fo
 ## v0.0.4 to v0.0.5
 
 Pass onCancel callback to execute when cancel button is pressed
+
+# v0.0.5 to v0.0.6
+
+Pass PageFormData as arguments and receive data using `PageForms.of`
