@@ -235,7 +235,7 @@ class _PageControllersState<T> extends State<_PageControllers> with SingleTicker
         );
   }
 
-  Widget _buildSubmitButton(Widget nextButton, PageFormData formData) {
+  Widget _buildSubmitButton(Widget nextButton, PageFormData<T> formData) {
     return StreamBuilder<T>(
       stream: formData.dataStream,
       builder: (BuildContext dataContext, AsyncSnapshot<T> dataSnapshot) {
