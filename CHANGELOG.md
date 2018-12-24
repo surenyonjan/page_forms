@@ -15,3 +15,7 @@ Pass onCancel callback to execute when cancel button is pressed
 # v0.0.5 to v0.0.6
 
 Pass PageFormData as arguments and receive data using `PageForms.of`
+
+# v0.0.6 to v0.0.7
+
+Fixed `PageFormData.onSubmit` type
